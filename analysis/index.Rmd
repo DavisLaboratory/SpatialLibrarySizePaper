@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Library size confounds biology in spatial transcriptomics"
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
@@ -8,4 +8,12 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+The website hosts the analysis accompanying the publication:
+
+Bhuva DD, Tan CW, Marceaux C, Chen J, Kharbanda M, Jin X, Liu N, Feher K, Putri G, Asselin-Labat ML, Phipson B. Library size confounds biology in spatial transcriptomics data. bioRxiv. 2023:2023-03.
+
+The analysis of each spatial transcriptomics dataset is in a separate file below:
+
+* [NanoString CosMx Human NSCLC](libsize_cosmx.html)
+* [10x Xenium Mouse Brain](libsize_xenium.html)
+* [BGI STOmics Mouse Brain](libsize_stomics.html)

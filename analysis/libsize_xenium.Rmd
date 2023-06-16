@@ -1,0 +1,362 @@
+---
+title: 'Xenium Mouse Brain - Library size confounds biology in spatial transcriptomics'
+author: "Dharmesh D. Bhuva, Chin Wee Tan, Claire Marceaux, Jinjin Chen, Malvika Kharbanda, Xinyi Jin, Ning Liu, Kristen Feher, Givanna Putri, Marie-Liesse Asselin-Labat, Belinda Phipson*, Melissa J. Davis*"
+format: 
+  html:
+    theme: flatly
+    code-fold: true
+    toc: true
+    number-sections: true
+    df-print: paged
+    code-line-numbers: true
+    embed-resources: true
+editor: source
+---
+
+```{r}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r}
+# load packages required for analysis
+library(tidyverse)
+library(patchwork)
+library(SpatialExperiment)
+library(ExperimentHub)
+library(SubcellularSpatialData)
+library(car)
+```
+
+# Load data
+
+All transcript detection level data is hosted on the ExperimentHub as part of the `SubcellularSpatialData` package. Data on the ExperimentHub can be queried as below. The `SubcellularSpatialData` hosts region annotated data from 3 sub-cellular resolution spatial transcriptomics platforms (NanoString CosMx, 10x Xenium, and BGI STOmics).
+
+```{r}
+#identify datasets present in the data package
+eh = ExperimentHub()
+query(eh, 'SubcellularSpatialData')
+```
+
+Transcript detection data from the package is loaded as follows and contains the _x_ and _y_ coordinates of each detection/spot, gene name, gene count (1 for CosMx and Xenium representing each detection), genetype, region annotations, and other technology specific information.
+
+```{r}
+tx_detections = eh[['EH8230']]
+head(tx_detections)
+#total detections per sample
+tx_detections |> 
+  group_by(sample_id) |> 
+  summarise(TotalDetections = sum(counts))
+```
+
+This workflow analyses the 10x Xenium data. The colour map used by the Allen Brain Atlas (ABA) is used to visualise annotated data points. This is stored in the _ABA_V3_ontology.csv_ file.
+
+```{r}
+#Load ABA v3 ontology colour map
+ont_df = read.csv('data/ABA_V3_ontology.csv')
+colmap = ont_df$color_hex_triplet
+names(colmap) = ont_df$acronym
+```
+
+The Allen Brain Atlas annotates regions of the brain at multiple levels (Level 0 to 11). Each data point is assigned an annotation for each level. The overall annotation of each datapoint is the lowest non-missing level. For example, if a detection has annotations for levels 1-5 and 8-9 but missing annotations for levels 6-7 and 10-11, the detection's annotation would be the level 9 annotation. The _region_ column stores the lowest non-mission annotation while the _level_ column stores the corresponding annotation level. Sub-structures of the CA region, specifically the CA1, CA2 and CA3, pyramidal layers (CA1sp, CA2sp, and CA3sp respectively) that were missing in the ABA were manually annotated.
+
+```{r fig.width=8, fig.height=4}
+#region summaries
+tx_detections |> 
+  filter(genetype %in% 'Gene') |> 
+  group_by(sample_id, region) |> 
+  summarise(TotalDetections = sum(counts)) |> 
+  mutate(PropDetections = TotalDetections / sum(TotalDetections)) |> 
+  arrange(desc(PropDetections)) |> 
+  ggplot(
+    aes(
+      fct_reorder(region, PropDetections, median),
+      PropDetections,
+      fill = region,
+      group = paste(sample_id, region)
+    )
+  ) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  scale_fill_manual(values = colmap) +
+  labs(x = 'Region', y = 'Proportion of detections') +
+  vissE::bhuvad_theme() +
+  theme(legend.position = 'none', axis.text.x = element_blank())
+#level summaries
+tx_detections |> 
+  filter(genetype %in% 'Gene') |> 
+  group_by(sample_id, level) |> 
+  summarise(TotalDetections = sum(counts)) |> 
+  mutate(PropDetections = TotalDetections / sum(TotalDetections)) |> 
+  arrange(desc(PropDetections)) |> 
+  ggplot(
+    aes(
+      fct_reorder(level, PropDetections, median),
+      PropDetections,
+      fill = level,
+      group = paste(sample_id, level)
+    )
+  ) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  scale_fill_viridis_d(option = 'G') +
+  labs(x = 'Level', y = 'Proportion of detections') +
+  vissE::bhuvad_theme() +
+  theme(legend.position = 'none')
+```
+
+# Summarise detections in bins
+
+Since cell boundary detection is still a work in progress, we bin individual detections in to a hexagonal grid with 200 bins along each axis. The results are saved into a `SpatialExperiment` object where each column represents a bin and each row a gene.
+
+```{r}
+spe = tx2spe(tx_detections, bin = 'hex', nbins = 200)
+spe$ntranscripts = colSums(counts(spe)[rowData(spe)$genetype %in% 'Gene', ])
+spe
+```
+
+# Transcript density reveals tissue architecture
+
+Visualising transcript density using hexbin plots where detections are binned in to a hexagonal grid reveals tissue structure.
+
+```{r fig.width=8, fig.height=8}
+hex_counts = as.data.frame(colData(spe)) |> 
+  cbind(as.data.frame(spatialCoords(spe)))
+
+#library size
+p1 = hex_counts |> 
+  ggplot(aes(x, y, colour = ntranscripts / 1000)) +
+  geom_point(size = 0.1) +
+  scale_colour_viridis_c(option = 'F') +
+  facet_wrap(~ sample_id, scales = 'free') +
+  labs(x = '', y = '', colour = 'Library size (1000s)') +
+  vissE::bhuvad_theme() +
+  theme(
+    axis.text = element_blank(),
+    panel.background = element_rect(fill = '#444444')
+  )
+#region
+p2 = hex_counts |> 
+  ggplot(aes(x, y, colour = region)) +
+  geom_point(size = 0.1) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  facet_wrap(~ sample_id, scales = 'free') +
+  labs(x = '', y = '', colour = '') +
+  vissE::bhuvad_theme() +
+  theme(
+    axis.text = element_blank(),
+    panel.background = element_rect(fill = '#444444')
+  )
+p1 / p2 + plot_layout(guides = 'collect') & theme(legend.position = 'bottom')
+```
+
+# Average number of transcripts per cell vary across regions
+
+We can assess the average transcripts detected per cell (library size) across regions without assigning transcripts to cells.
+
+$AvgLibrarySize_{region} = \frac{\#transcripts_{region}}{\#cells_{region}}$
+
+```{r fig.width=8, fig.height=10}
+tx_detections |> 
+  filter(genetype %in% 'Gene') |> 
+  group_by(sample_id, region) |> 
+  summarise(LibrarySize = sum(counts) / length(unique(cell))) |> 
+  ggplot(
+    aes(
+      LibrarySize / 1000,
+      fct_reorder(region, LibrarySize, mean),
+      fill = region
+    ),
+  ) +
+  geom_bar(stat = 'identity') +
+  scale_fill_manual(values = colmap, guide = guide_none()) +
+  labs(x = 'Region', y = 'Library size per cell (1000s)') +
+  facet_wrap(~ sample_id, scales = 'free_x', ncol = 3) +
+  vissE::bhuvad_theme()
+```
+
+# Library size across space is driven by cellular density and spatial regions
+
+We can determine the factors driving transcript detection across space by assessing their effects using binned data. We expect library sizes to be higher in spatial regions with many cells. Based on the observations in the previous sections, we would also suspect that different tissue regions will produce different numbers of transcripts, despite having similar cellular desity. Visualising this effect using the plot below shows how the primary contributor of transcript detections is the number of cells in the binned region. We also see that there is a region specific effect where the library size shifts up or down depending on the region being assessed.
+
+Grey regions representing fibre tracts of the brain have larger library sizes where more cells are present, however, these library sizes are lower than most other regions of the brain on average. In contrast, the cortex (dark green regions), has much larger library sizes that most other regions and the magnitude of relationship between the number of cells and library sizes (the slope) is much larger (steeper slope).
+
+```{r fig.width=8, fig.height=4}
+hex_counts |> 
+  ggplot(aes(ncells, ntranscripts / 1000, colour = region)) +
+  geom_jitter(width = 0.4, size = 0.3) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  labs(x = 'Cells per bin', y = 'Detections per bin (1000s)', caption = '*jitter applied for visualisation purposes') +
+  facet_wrap(~ sample_id, ncol = 3, scales = 'free') +
+  vissE::bhuvad_theme()
+```
+
+# Statistical modelling of library sizes reveals a region-specific effect size
+
+Point pattern spatial data can be modelled using an inhomogeneous Poisson point process. A simple approach to model library sizes across space is to bin detections and then model binned counts using a generalised linear models (GLMs) with a Poisson link function. Counts per bin can be modelled as a function of the number of cells, the tissue region and other technology specific covariates such as the field of view. Additionally, if other spatial effects are present, functions of the coordinates can be used to model them. We model the former knowledge driven spatial trends. However, as is evident from some of these analyses, there may be spatial effects around the boundaries of tissues and these can be modelled using the x,y coordinates and their interactions.
+
+```{r}
+#fit models
+libsize_models = hex_counts |> 
+  filter(!is.na(region), ncells > 0 | ntranscripts > 0) |> 
+  group_by(sample_id) |>
+  summarise(model = list(glm(ntranscripts ~ 0 + ncells * region, family = poisson)),
+            across(everything(), list)) |> 
+  mutate(model = unlist(model, recursive = FALSE))
+```
+
+## Model diagnostics using residuals {.tabset}
+
+We can visualise the Pearson and standard residuals to assess the model fit.
+
+```{r}
+#visualise residuals
+residuals_df = libsize_models |>
+  mutate(
+    Predicted = lapply(model, predict),
+    Residuals = lapply(model, residuals),
+    ResidualsPearson = lapply(model, residuals, type = 'pearson'),
+  ) |> 
+  unnest(!c(sample_id, model))
+```
+
+### Spatial residuals {.unnumbered}
+
+```{r fig.width=8, fig.height=4}
+#plot residuals ves fitted values
+residuals_df |> 
+  ggplot() +
+  geom_point(aes(x, y, colour = Residuals), size = 0.1) +
+  facet_wrap(~ sample_id, scales = 'free') +
+  scico::scale_color_scico(palette = 'bam',
+                           oob = scales::squish,
+                           limits = c(-50, 50) * 1) +
+  labs(title = 'Residuals by location', x = '', y = '') +
+  vissE::bhuvad_theme() +
+  theme(axis.text = element_blank(), legend.position = 'bottom')
+```
+
+### Residuals vs Fitted {.unnumbered}
+
+```{r fig.width=8, fig.height=8}
+#plot residuals ves fitted values
+residuals_df |> 
+  filter(Predicted > 4) |> 
+  ggplot(aes(Predicted, Residuals)) +
+  geom_point(aes(colour = region), size = 0.4) +
+  geom_hline(yintercept = 0, col = 1, lwd = 0.2) +
+  geom_smooth(se = FALSE, col = 2, lwd = 0.5, method = 'loess') +
+  facet_wrap(~ sample_id, ncol = 1) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  labs(
+    x = 'log(Predicted library size)',
+    y = 'Residuals',
+    title = 'Residuals vs fitted plot',
+    caption = '*3 outliers removed for visualisation purposes'
+  ) +
+  vissE::bhuvad_theme()
+```
+
+### Scale-location {.unnumbered}
+
+```{r fig.width=8, fig.height=8}
+#plot residuals ves fitted values
+residuals_df |> 
+  filter(Predicted > 4) |> 
+  ggplot(aes(Predicted, sqrt(abs(ResidualsPearson)))) +
+  geom_point(aes(colour = region), size = 0.4) +
+  geom_smooth(se = FALSE, col = 2, lwd = 0.5, method = 'loess') +
+  facet_wrap(~ sample_id, ncol = 1) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  labs(
+    x = 'log(Predicted library size)',
+    y = expression(sqrt('|Std. Pearson resid.|')),
+    title = 'Scale-location plot',
+    caption = '*3 outliers removed for visualisation purposes'
+  ) +
+  vissE::bhuvad_theme()
+```
+
+### Regional residuals {.unnumbered}
+
+```{r fig.width=8, fig.height=8}
+#plot residuals ves fitted values
+residuals_df |> 
+  ggplot() +
+  geom_boxplot(aes(reorder(region, Residuals, FUN = var), Residuals, fill = region)) +
+  geom_hline(yintercept = 0, col = 2) +
+  facet_wrap(~ sample_id, ncol = 1) +
+  scale_fill_manual(values = colmap, guide = guide_none()) +
+  labs(title = 'Residuals by region') +
+  vissE::bhuvad_theme() +
+  labs(x = 'Region') +
+  theme(axis.text.x = element_blank())
+```
+
+## {-}
+
+Analysing the residuals shows that:
+
+1. The Poisson fit works well as there is little to no over-dispersion with respect to the number of cells (fitted vs residual plot).
+1. There is little to no heteroscedasticity (scale-location plot).
+1. Much of the unexplained variation is attributed to the lower ends of the tisse which were not annotated properly because of tissue distortion.
+1. Variation in residuals is not region-specific.
+
+## Region-specific effect sizes contribute to library size differences
+
+Having fit the model, we can analyse the effect size of different regions. The modelling we perform allows each region to have its own linear trend between the number of cells and the total trascripts detected. We can therefore analyse the slope and intercepts of these relationships across regions.
+
+This analysis shows that the slope (rate of increase in transcript density with respect to cell density) is generally higher in the cortex (dark green) than in the fibre tracts of the brain (grays).
+
+```{r fig.width=8, fig.height=4}
+coef_df = libsize_models |>
+  mutate(Coefficient = lapply(model, coef),
+         Region = lapply(Coefficient, names)) |>
+  unnest(c(Coefficient, Region)) |>
+  select(sample_id, Coefficient, Region) |>
+  group_by(sample_id) |> 
+  mutate(NCell = Coefficient[Region == 'ncells']) |> 
+  ungroup() |> 
+  mutate(
+    Term = case_when(
+      grepl('^region[[:alnum:]/ ]+$', Region) ~ 'CoefRegion',
+      grepl('^ncells:region[[:alnum:]/ ]+$', Region) ~ 'CoefInteraction',
+      .default = NA_character_
+    ),
+    Region = gsub('^(ncells:)?region', '', Region)
+  ) |> 
+  drop_na(Term) |> 
+  pivot_wider(names_from = Term, values_from = Coefficient, values_fill = 0) |> 
+  mutate(slope = NCell + CoefInteraction, intercept = CoefRegion)
+
+coef_df |> 
+  ggplot() +
+  geom_jitter(aes(exp(slope), exp(intercept) / 1e3, colour = Region)) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  facet_wrap(~ sample_id) +
+  labs(
+    x = 'Fold-change per cell',
+    y = 'Average library size (1000s)',
+    caption = '* 7 outlier removed for visualisation purposes'
+  ) +
+  lims(x = c(0.95, 1.17), y = c(0, 3)) +
+  vissE::bhuvad_theme()
+```
+
+## Validation using ANOVA
+
+We can perform an analysis of variance (ANOVA) analysis on the model to determine the importance of region and the cell density in predicting transcript density. We use a Type II ANOVA test from the `car` package to do so.
+
+```{r}
+aov_results = libsize_models |> 
+  select(sample_id, model) |> 
+  mutate(ANOVA = lapply(model, car::Anova, test.statistic = 'F')) |>
+  mutate(ANOVASummary = lapply(ANOVA, function(x) as.data.frame(x))) |>
+  mutate(Covariate = lapply(ANOVA, function(x) {
+    as.matrix(x) |> rownames() |> trimws()
+  })) |>
+  unnest(c(ANOVASummary, Covariate)) |> 
+  filter(!Covariate %in% 'Residuals') |> 
+  select(!c(model, ANOVA))
+
+aov_results |> 
+  DT::datatable(filter = 'top') |> 
+  DT::formatSignif(2:5, digits = 4)
+```

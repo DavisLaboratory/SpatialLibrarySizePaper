@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Dharmesh D. Bhuva, Chin Wee Tan, Claire Marceaux, Jinjin Chen, Malvika Kharbanda, Xinyi Jin, Ning Liu, Kristen Feher, Givanna Putri, Marie-Liesse Asselin-Labat, Belinda Phipson, Melissa J. Davis" />
+
+
+<title>STOmics Mouse Brain - Library size confounds biology in spatial transcriptomics</title>
+
+<script src="site_libs/header-attrs-2.22/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.28/datatables.js"></script>
+<link href="site_libs/dt-core-1.13.4/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.13.4/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.13.4/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
+<script src="site_libs/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="site_libs/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
+<script src="site_libs/selectize-0.12.0/selectize.min.js"></script>
+<link href="site_libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">SpatialLibrarySizePaper</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">STOmics Mouse Brain - Library size
+confounds biology in spatial transcriptomics</h1>
+<h4 class="author">Dharmesh D. Bhuva, Chin Wee Tan, Claire Marceaux,
+Jinjin Chen, Malvika Kharbanda, Xinyi Jin, Ning Liu, Kristen Feher,
+Givanna Putri, Marie-Liesse Asselin-Labat, Belinda Phipson<em>, Melissa
+J. Davis</em></h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2023-06-13
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>SpatialLibrarySizePaper/</code>
+<span class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20230612code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20230612)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20230612code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20230612)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomDavisLaboratorySpatialLibrarySizePapertreece1a62084f71fd3559eece289b1f49fa4c088836targetblankce1a620a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/DavisLaboratory/SpatialLibrarySizePaper/tree/ce1a62084f71fd3559eece289b1f49fa4c088836" target="_blank">ce1a620</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomDavisLaboratorySpatialLibrarySizePapertreece1a62084f71fd3559eece289b1f49fa4c088836targetblankce1a620a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/DavisLaboratory/SpatialLibrarySizePaper/tree/ce1a62084f71fd3559eece289b1f49fa4c088836" target="_blank">ce1a620</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
+
+Untracked files:
+    Untracked:  analysis/libsize_cosmx.Rmd
+    Untracked:  analysis/libsize_stomics.Rmd
+    Untracked:  analysis/libsize_xenium.Rmd
+    Untracked:  data/ABA_V3_ontology.csv
+
+Unstaged changes:
+    Modified:   analysis/_site.yml
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/index.Rmd
+    Modified:   analysis/license.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>knitr::opts_chunk$set(warning = FALSE, message = FALSE)</code></pre>
+<pre class="r"><code># load packages required for analysis
+library(tidyverse)
+library(patchwork)
+library(SpatialExperiment)
+library(ExperimentHub)
+library(SubcellularSpatialData)
+library(car)</code></pre>
+<div id="load-data" class="section level1">
+<h1>Load data</h1>
+<p>All transcript detection level data is hosted on the ExperimentHub as
+part of the <code>SubcellularSpatialData</code> package. Data on the
+ExperimentHub can be queried as below. The
+<code>SubcellularSpatialData</code> hosts region annotated data from 3
+sub-cellular resolution spatial transcriptomics platforms (NanoString
+CosMx, 10x Xenium, and BGI STOmics).</p>
+<pre class="r"><code>#identify datasets present in the data package
+eh = ExperimentHub()
+query(eh, &#39;SubcellularSpatialData&#39;)</code></pre>
+<pre><code>ExperimentHub with 3 records
+# snapshotDate(): 2023-06-01
+# $dataprovider: NanoString, BGI, 10x
+# $species: Mus musculus, Homo sapiens
+# $rdataclass: data.frame
+# additional mcols(): taxonomyid, genome, description,
+#   coordinate_1_based, maintainer, rdatadateadded, preparerclass, tags,
+#   rdatapath, sourceurl, sourcetype 
+# retrieve records with, e.g., &#39;object[[&quot;EH8230&quot;]]&#39; 
+
+           title           
+  EH8230 | xenium_mm_brain 
+  EH8231 | stomics_mm_brain
+  EH8232 | cosmx_hs_nsclc  </code></pre>
+<p>Transcript detection data from the package is loaded as follows and
+contains the <em>x</em> and <em>y</em> coordinates of each
+detection/spot, gene name, gene count (1 for CosMx and Xenium
+representing each detection), genetype, region annotations, and other
+technology specific information.</p>
+<pre class="r"><code>tx_detections = eh[[&#39;EH8231&#39;]]
+#create and add DNB IDs
+tx_detections = tx_detections |&gt; 
+  mutate(dnb_id = paste(x, y, sep = &#39;_&#39;))
+head(tx_detections)</code></pre>
+<pre><code>      sample_id cell          gene genetype     x     y counts region
+1 STOmics Brain   NA 0610005C13Rik     Gene 11864 11748      3  TEa6a
+2 STOmics Brain   NA 0610005C13Rik     Gene  6632  9074      1    CA3
+3 STOmics Brain   NA 0610005C13Rik     Gene 10339 15898      2  VISp4
+4 STOmics Brain   NA 0610005C13Rik     Gene  4290 10831      2    VTA
+5 STOmics Brain   NA 0610005C13Rik     Gene  5714  9053      2   root
+6 STOmics Brain   NA 0610005C13Rik     Gene  6674 17763      1  RSPv5
+  technology   level Level0 Level1 Level2 Level3 Level4    Level5 Level6 Level7
+1    STOmics Level11   root   grey     CH    CTX  CTXpl Isocortex    TEa   &lt;NA&gt;
+2    STOmics  Level9   root   grey     CH    CTX  CTXpl       HPF    HIP   &lt;NA&gt;
+3    STOmics Level11   root   grey     CH    CTX  CTXpl Isocortex    VIS   &lt;NA&gt;
+4    STOmics  Level8   root   grey     BS   &lt;NA&gt;   &lt;NA&gt;        MB  MBmot   &lt;NA&gt;
+5    STOmics  Level0   root   &lt;NA&gt;   &lt;NA&gt;   &lt;NA&gt;   &lt;NA&gt;      &lt;NA&gt;   &lt;NA&gt;   &lt;NA&gt;
+6    STOmics Level11   root   grey     CH    CTX  CTXpl Isocortex   &lt;NA&gt;   &lt;NA&gt;
+  Level8 Level9 Level10 Level11      dnb_id
+1   &lt;NA&gt;   &lt;NA&gt;    &lt;NA&gt;   TEa6a 11864_11748
+2     CA    CA3    &lt;NA&gt;    &lt;NA&gt;   6632_9074
+3   VISp   &lt;NA&gt;    &lt;NA&gt;   VISp4 10339_15898
+4    VTA   &lt;NA&gt;    &lt;NA&gt;    &lt;NA&gt;  4290_10831
+5   &lt;NA&gt;   &lt;NA&gt;    &lt;NA&gt;    &lt;NA&gt;   5714_9053
+6    RSP   RSPv    &lt;NA&gt;   RSPv5  6674_17763</code></pre>
+<pre class="r"><code>#total detections per sample
+tx_detections |&gt; 
+  group_by(sample_id) |&gt; 
+  summarise(TotalDetections = sum(counts))</code></pre>
+<pre><code># A tibble: 1 × 2
+  sample_id     TotalDetections
+  &lt;chr&gt;                   &lt;int&gt;
+1 STOmics Brain       137975583</code></pre>
+<p>This workflow analyses the BGI STOmics data. The colour map used by
+the Allen Brain Atlas (ABA) is used to visualise annotated data points.
+This is stored in the <em>ABA_V3_ontology.csv</em> file.</p>
+<pre class="r"><code>#Load ABA v3 ontology colour map
+ont_df = read.csv(&#39;data/ABA_V3_ontology.csv&#39;)
+colmap = ont_df$color_hex_triplet
+names(colmap) = ont_df$acronym</code></pre>
+<p>The Allen Brain Atlas annotates regions of the brain at multiple
+levels (Level 0 to 11). Each data point is assigned an annotation for
+each level. The overall annotation of each datapoint is the lowest
+non-missing level. For example, if a detection has annotations for
+levels 1-5 and 8-9 but missing annotations for levels 6-7 and 10-11, the
+detection’s annotation would be the level 9 annotation. The
+<em>region</em> column stores the lowest non-mission annotation while
+the <em>level</em> column stores the corresponding annotation level.
+Sub-structures of the CA region, specifically the CA1, CA2 and CA3,
+pyramidal layers (CA1sp, CA2sp, and CA3sp respectively) that were
+missing in the ABA were manually annotated.</p>
+<pre class="r"><code>#region summaries
+tx_detections |&gt; 
+  filter(genetype %in% &#39;Gene&#39;) |&gt; 
+  group_by(sample_id, region) |&gt; 
+  summarise(TotalDetections = sum(counts)) |&gt; 
+  mutate(PropDetections = TotalDetections / sum(TotalDetections)) |&gt; 
+  arrange(desc(PropDetections)) |&gt; 
+  ggplot(
+    aes(
+      fct_reorder(region, PropDetections, median),
+      PropDetections,
+      fill = region,
+      group = paste(sample_id, region)
+    )
+  ) +
+  geom_bar(stat = &#39;identity&#39;, position = &#39;dodge&#39;) +
+  scale_fill_manual(values = colmap) +
+  labs(x = &#39;Region&#39;, y = &#39;Proportion of detections&#39;) +
+  vissE::bhuvad_theme() +
+  theme(legend.position = &#39;none&#39;, axis.text.x = element_blank())</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#level summaries
+tx_detections |&gt; 
+  filter(genetype %in% &#39;Gene&#39;) |&gt; 
+  group_by(sample_id, level) |&gt; 
+  summarise(TotalDetections = sum(counts)) |&gt; 
+  mutate(PropDetections = TotalDetections / sum(TotalDetections)) |&gt; 
+  arrange(desc(PropDetections)) |&gt; 
+  ggplot(
+    aes(
+      fct_reorder(level, PropDetections, median),
+      PropDetections,
+      fill = level,
+      group = paste(sample_id, level)
+    )
+  ) +
+  geom_bar(stat = &#39;identity&#39;, position = &#39;dodge&#39;) +
+  scale_fill_viridis_d(option = &#39;G&#39;) +
+  labs(x = &#39;Level&#39;, y = &#39;Proportion of detections&#39;) +
+  vissE::bhuvad_theme() +
+  theme(legend.position = &#39;none&#39;)</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-6-2.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="summarise-detections-in-bins" class="section level1">
+<h1>Summarise detections in bins</h1>
+<p>Since cell boundary detection is still a work in progress, we bin
+individual detections in to a hexagonal grid with 100 bins along each
+axis. The results are saved into a <code>SpatialExperiment</code> object
+where each column represents a bin and each row a gene.</p>
+<pre class="r"><code>spe = tx2spe(tx_detections, bin = &#39;hex&#39;, nbins = 100)
+spe$ntranscripts = colSums(counts(spe)[rowData(spe)$genetype %in% &#39;Gene&#39;, ])
+spe</code></pre>
+<pre><code>class: SpatialExperiment 
+dim: 26177 7745 
+metadata(0):
+assays(1): counts
+rownames(26177): 0610005C13Rik 0610006L08Rik ... mt-Nd5 mt-Nd6
+rowData names(2): gene genetype
+colnames(7745): STOmics Brain_1 STOmics Brain_2 ... STOmics Brain_7744
+  STOmics Brain_7745
+colData names(22): sample_id bin_id ... dnb_id ntranscripts
+reducedDimNames(0):
+mainExpName: NULL
+altExpNames(0):
+spatialCoords names(2) : x y
+imgData names(1): sample_id</code></pre>
+</div>
+<div id="transcript-density-reveals-tissue-architecture"
+class="section level1">
+<h1>Transcript density reveals tissue architecture</h1>
+<p>Visualising transcript density using hexbin plots where detections
+are binned in to a hexagonal grid reveals tissue structure.</p>
+<pre class="r"><code>hex_counts = as.data.frame(colData(spe)) |&gt; 
+  cbind(as.data.frame(spatialCoords(spe)))
+
+#library size
+p1 = hex_counts |&gt; 
+  ggplot(aes(x, y, colour = ntranscripts / 1000)) +
+  geom_point(size = 0.1) +
+  scale_colour_viridis_c(option = &#39;F&#39;) +
+  facet_wrap(~ sample_id, scales = &#39;free&#39;) +
+  labs(x = &#39;&#39;, y = &#39;&#39;, colour = &#39;Library size (1000s)&#39;) +
+  vissE::bhuvad_theme() +
+  theme(
+    axis.text = element_blank(),
+    panel.background = element_rect(fill = &#39;#444444&#39;)
+  )
+#region
+p2 = hex_counts |&gt; 
+  ggplot(aes(x, y, colour = region)) +
+  geom_point(size = 0.1) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  facet_wrap(~ sample_id, scales = &#39;free&#39;) +
+  labs(x = &#39;&#39;, y = &#39;&#39;, colour = &#39;&#39;) +
+  vissE::bhuvad_theme() +
+  theme(
+    axis.text = element_blank(),
+    panel.background = element_rect(fill = &#39;#444444&#39;)
+  )
+p1 / p2 + plot_layout(guides = &#39;collect&#39;) &amp; theme(legend.position = &#39;bottom&#39;)</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-8-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div id="average-number-of-transcripts-per-cell-vary-across-regions"
+class="section level1">
+<h1>Average number of transcripts per cell vary across regions</h1>
+<p>We can assess the average transcripts detected per cell (library
+size) across regions without assigning transcripts to cells.</p>
+<p><span class="math inline">\(AvgLibrarySize_{region} =
+\frac{\#transcripts_{region}}{\#cells_{region}}\)</span></p>
+<pre class="r"><code>tx_detections |&gt; 
+  filter(genetype %in% &#39;Gene&#39;, !is.na(region)) |&gt; 
+  group_by(sample_id, region) |&gt; 
+  summarise(LibrarySize = sum(counts) / length(unique(cell))) |&gt; 
+  ggplot(
+    aes(
+      LibrarySize / 1000,
+      fct_reorder(region, LibrarySize, mean),
+      fill = region
+    ),
+  ) +
+  geom_bar(stat = &#39;identity&#39;) +
+  scale_fill_manual(values = colmap, guide = guide_none()) +
+  scale_x_continuous(limits = c(0, 4), oob = scales::squish) +
+  annotate(&#39;text&#39;, y = 142, x = 4, label = &#39;*&#39;, size = 6, vjust = 0.75) +
+  labs(x = &#39;Region&#39;, y = &#39;Library size per cell (1000s)&#39;) +
+  facet_wrap(~ sample_id, scales = &#39;free_x&#39;, ncol = 3) +
+  vissE::bhuvad_theme()</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-9-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div
+id="library-size-across-space-is-driven-by-cellular-density-and-spatial-regions"
+class="section level1">
+<h1>Library size across space is driven by cellular density and spatial
+regions</h1>
+<p>We can determine the factors driving transcript detection across
+space by assessing their effects using binned data. We expect library
+sizes to be higher in spatial regions with many cells. Based on the
+observations in the previous sections, we would also suspect that
+different tissue regions will produce different numbers of transcripts,
+despite having similar cellular desity. Visualising this effect using
+the plot below shows how the primary contributor of transcript
+detections is the number of cells in the binned region. We also see that
+there is a region specific effect where the library size shifts up or
+down depending on the region being assessed.</p>
+<p>Pink regions representing the white matter of the brain have larger
+library sizes where more cells are present, however, these library sizes
+are lower than most other regions of the brain on average. In contrast,
+the cortex (dark green regions), has much larger library sizes that most
+other regions and the magnitude of relationship between the number of
+cells and library sizes (the slope) is much larger (steeper slope).</p>
+<pre class="r"><code>hex_counts |&gt; 
+  ggplot(aes(ncells, ntranscripts / 1000, colour = region)) +
+  geom_jitter(width = 0.4, size = 0.3) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  labs(x = &#39;Cells per bin&#39;, y = &#39;Detections per bin (1000s)&#39;, caption = &#39;*jitter applied for visualisation purposes&#39;) +
+  facet_wrap(~ sample_id, ncol = 3, scales = &#39;free&#39;) +
+  vissE::bhuvad_theme()</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-10-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div
+id="statistical-modelling-of-library-sizes-reveals-a-region-specific-effect-size"
+class="section level1">
+<h1>Statistical modelling of library sizes reveals a region-specific
+effect size</h1>
+<p>Point pattern spatial data can be modelled using an inhomogeneous
+Poisson point process. A simple approach to model library sizes across
+space is to bin detections and then model binned counts using a
+generalised linear models (GLMs) with a Poisson link function. Counts
+per bin can be modelled as a function of the number of cells, the tissue
+region and other technology specific covariates such as the field of
+view. Additionally, if other spatial effects are present, functions of
+the coordinates can be used to model them. We model the former knowledge
+driven spatial trends. However, as is evident from some of these
+analyses, there may be spatial effects around the boundaries of tissues
+and these can be modelled using the x,y coordinates and their
+interactions.</p>
+<pre class="r"><code>#fit models
+libsize_models = hex_counts |&gt; 
+  filter(!is.na(region), ncells &gt; 0 | ntranscripts &gt; 0) |&gt; 
+  group_by(sample_id) |&gt;
+  summarise(model = list(glm(ntranscripts ~ 0 + ncells * region, family = poisson)),
+            across(everything(), list)) |&gt; 
+  mutate(model = unlist(model, recursive = FALSE))</code></pre>
+<div id="model-diagnostics-using-residuals"
+class="section level2 tabset">
+<h2 class="tabset">Model diagnostics using residuals</h2>
+<p>We can visualise the Pearson and standard residuals to assess the
+model fit.</p>
+<pre class="r"><code>#visualise residuals
+residuals_df = libsize_models |&gt;
+  mutate(
+    Predicted = lapply(model, predict),
+    Residuals = lapply(model, residuals),
+    ResidualsPearson = lapply(model, residuals, type = &#39;pearson&#39;),
+  ) |&gt; 
+  unnest(!c(sample_id, model))</code></pre>
+<div id="spatial-residuals" class="section level3 unnumbered">
+<h3 class="unnumbered">Spatial residuals</h3>
+<pre class="r"><code>#plot residuals ves fitted values
+residuals_df |&gt; 
+  ggplot() +
+  geom_point(aes(x, y, colour = Residuals), size = 0.1) +
+  facet_wrap(~ sample_id, scales = &#39;free&#39;) +
+  scico::scale_color_scico(palette = &#39;bam&#39;,
+                           oob = scales::squish,
+                           limits = c(-50, 50) * 1) +
+  labs(title = &#39;Residuals by location&#39;, x = &#39;&#39;, y = &#39;&#39;) +
+  vissE::bhuvad_theme() +
+  theme(axis.text = element_blank(), legend.position = &#39;bottom&#39;)</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-13-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="residuals-vs-fitted" class="section level3 unnumbered">
+<h3 class="unnumbered">Residuals vs Fitted</h3>
+<pre class="r"><code>#plot residuals ves fitted values
+residuals_df |&gt; 
+  filter(Predicted &gt; 4) |&gt; 
+  ggplot(aes(Predicted, Residuals)) +
+  geom_point(aes(colour = region), size = 0.4) +
+  geom_hline(yintercept = 0, col = 1, lwd = 0.2) +
+  geom_smooth(se = FALSE, col = 2, lwd = 0.5, method = &#39;loess&#39;) +
+  facet_wrap(~ sample_id, ncol = 1) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  lims(x = c(7.5, 11.5)) +
+  labs(
+    x = &#39;log(Predicted library size)&#39;,
+    y = &#39;Residuals&#39;,
+    title = &#39;Residuals vs fitted plot&#39;,
+    caption = &#39;*3 outliers removed for visualisation purposes&#39;
+  ) +
+  vissE::bhuvad_theme()</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-14-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="scale-location" class="section level3 unnumbered">
+<h3 class="unnumbered">Scale-location</h3>
+<pre class="r"><code>#plot residuals ves fitted values
+residuals_df |&gt; 
+  filter(Predicted &gt; 4) |&gt; 
+  ggplot(aes(Predicted, sqrt(abs(ResidualsPearson)))) +
+  geom_point(aes(colour = region), size = 0.4) +
+  geom_smooth(se = FALSE, col = 2, lwd = 0.5, method = &#39;loess&#39;) +
+  facet_wrap(~ sample_id, ncol = 1) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  labs(
+    x = &#39;log(Predicted library size)&#39;,
+    y = expression(sqrt(&#39;|Std. Pearson resid.|&#39;)),
+    title = &#39;Scale-location plot&#39;,
+    caption = &#39;*3 outliers removed for visualisation purposes&#39;
+  ) +
+  vissE::bhuvad_theme()</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-15-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="regional-residuals" class="section level3 unnumbered">
+<h3 class="unnumbered">Regional residuals</h3>
+<pre class="r"><code>#plot residuals ves fitted values
+residuals_df |&gt; 
+  ggplot() +
+  geom_boxplot(aes(reorder(region, Residuals, FUN = var), Residuals, fill = region)) +
+  geom_hline(yintercept = 0, col = 2) +
+  facet_wrap(~ sample_id, ncol = 1) +
+  scale_fill_manual(values = colmap, guide = guide_none()) +
+  labs(title = &#39;Residuals by region&#39;) +
+  vissE::bhuvad_theme() +
+  labs(x = &#39;Region&#39;) +
+  theme(axis.text.x = element_blank())</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-16-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="section" class="section level2 unnumbered">
+<h2 class="unnumbered"></h2>
+<p>Analysing the residuals shows that:</p>
+<ol style="list-style-type: decimal">
+<li>The Poisson fit works well as there is little to no over-dispersion
+with respect to the number of cells (fitted vs residual plot).</li>
+<li>There is little to no heteroscedasticity (scale-location plot).</li>
+<li>Much of the unexplained variation is attributed to the lower ends of
+the tisse which were not annotated properly because of tissue
+distortion.</li>
+<li>Variation in residuals is not region-specific.</li>
+</ol>
+</div>
+<div
+id="region-specific-effect-sizes-contribute-to-library-size-differences"
+class="section level2">
+<h2>Region-specific effect sizes contribute to library size
+differences</h2>
+<p>Having fit the model, we can analyse the effect size of different
+regions. The modelling we perform allows each region to have its own
+linear trend between the number of cells and the total trascripts
+detected. We can therefore analyse the slope and intercepts of these
+relationships across regions.</p>
+<p>This analysis shows that the slope (rate of increase in transcript
+density with respect to cell density) is generally higher in the cortex
+(dark green) than in the white matter of the brain (pinks).</p>
+<pre class="r"><code>coef_df = libsize_models |&gt;
+  mutate(Coefficient = lapply(model, coef),
+         Region = lapply(Coefficient, names)) |&gt;
+  unnest(c(Coefficient, Region)) |&gt;
+  select(sample_id, Coefficient, Region) |&gt;
+  group_by(sample_id) |&gt; 
+  mutate(NCell = Coefficient[Region == &#39;ncells&#39;]) |&gt; 
+  ungroup() |&gt; 
+  mutate(
+    Term = case_when(
+      grepl(&#39;^region[[:alnum:]/ ]+$&#39;, Region) ~ &#39;CoefRegion&#39;,
+      grepl(&#39;^ncells:region[[:alnum:]/ ]+$&#39;, Region) ~ &#39;CoefInteraction&#39;,
+      .default = NA_character_
+    ),
+    Region = gsub(&#39;^(ncells:)?region&#39;, &#39;&#39;, Region)
+  ) |&gt; 
+  drop_na(Term) |&gt; 
+  pivot_wider(names_from = Term, values_from = Coefficient, values_fill = 0) |&gt; 
+  mutate(slope = NCell + CoefInteraction, intercept = CoefRegion)
+
+coef_df |&gt; 
+  ggplot() +
+  geom_jitter(aes(exp(slope), exp(intercept) / 1e3, colour = Region)) +
+  scale_colour_manual(values = colmap, guide = guide_none()) +
+  facet_wrap(~ sample_id) +
+  labs(
+    x = &#39;Fold-change per cell&#39;,
+    y = &#39;Average library size (1000s)&#39;,
+    caption = &#39;* 3 outlier removed for visualisation purposes&#39;
+  ) +
+  lims(x = c(0.98, 1.2), y = c(0, 31)) +
+  vissE::bhuvad_theme()</code></pre>
+<p><img src="figure/libsize_stomics.Rmd/unnamed-chunk-17-1.png" width="384" style="display: block; margin: auto;" /></p>
+</div>
+<div id="validation-using-anova" class="section level2">
+<h2>Validation using ANOVA</h2>
+<p>We can perform an analysis of variance (ANOVA) analysis on the model
+to determine the importance of region and the cell density in predicting
+transcript density. We use a Type II ANOVA test from the
+<code>car</code> package to do so.</p>
+<pre class="r"><code>aov_results = libsize_models |&gt; 
+  select(sample_id, model) |&gt; 
+  mutate(ANOVA = lapply(model, car::Anova, test.statistic = &#39;F&#39;)) |&gt;
+  mutate(ANOVASummary = lapply(ANOVA, function(x) as.data.frame(x))) |&gt;
+  mutate(Covariate = lapply(ANOVA, function(x) {
+    as.matrix(x) |&gt; rownames() |&gt; trimws()
+  })) |&gt;
+  unnest(c(ANOVASummary, Covariate)) |&gt; 
+  filter(!Covariate %in% &#39;Residuals&#39;) |&gt; 
+  select(!c(model, ANOVA))
+
+aov_results |&gt; 
+  DT::datatable(filter = &#39;top&#39;) |&gt; 
+  DT::formatSignif(2:5, digits = 4)</code></pre>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-1ce3fccf5b1ae443f856" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1ce3fccf5b1ae443f856">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1816064.01220473\" data-max=\"1224447287.70542\" data-scale=\"9\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"1\" data-max=\"127\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"21.2201272438843\" data-max=\"13406.0293350022\" data-scale=\"14\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","2","3"],["STOmics Brain","STOmics Brain","STOmics Brain"],[8877838.655820269,1224447287.70542,1816064.012204727],[1,127,119],[12344.42998411627,13406.02933500225,21.2201272438843],[0,0,0],["ncells","region","ncells:region"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>sample_id<\/th>\n      <th>Sum Sq<\/th>\n      <th>Df<\/th>\n      <th>F value<\/th>\n      <th>Pr(&gt;F)<\/th>\n      <th>Covariate<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatSignif(data, 4, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatSignif(data, 4, 3, \",\", \".\", null);\n  }"},{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatSignif(data, 4, 3, \",\", \".\", null);\n  }"},{"targets":5,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatSignif(data, 4, 3, \",\", \".\", null);\n  }"},{"className":"dt-right","targets":[2,3,4,5]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render"],"jsHooks":[]}</script>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.3.0 (2023-04-21)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: CentOS Linux 7 (Core)
+
+Matrix products: default
+BLAS:   /stornext/System/data/apps/R/R-4.3.0/lib64/R/lib/libRblas.so 
+LAPACK: /stornext/System/data/apps/R/R-4.3.0/lib64/R/lib/libRlapack.so;  LAPACK version 3.11.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: UTC
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+ [1] car_3.1-2                     carData_3.0-5                
+ [3] SubcellularSpatialData_0.99.4 ExperimentHub_2.8.0          
+ [5] AnnotationHub_3.9.1           BiocFileCache_2.9.0          
+ [7] dbplyr_2.3.2                  SpatialExperiment_1.11.0     
+ [9] SingleCellExperiment_1.23.0   SummarizedExperiment_1.31.1  
+[11] Biobase_2.61.0                GenomicRanges_1.53.1         
+[13] GenomeInfoDb_1.37.1           IRanges_2.35.1               
+[15] S4Vectors_0.39.1              BiocGenerics_0.47.0          
+[17] MatrixGenerics_1.13.0         matrixStats_1.0.0            
+[19] patchwork_1.1.2               lubridate_1.9.2              
+[21] forcats_1.0.0                 stringr_1.5.0                
+[23] dplyr_1.1.2                   purrr_1.0.1                  
+[25] readr_2.1.4                   tidyr_1.3.0                  
+[27] tibble_3.2.1                  ggplot2_3.4.2                
+[29] tidyverse_2.0.0               workflowr_1.7.0              
+
+loaded via a namespace (and not attached):
+  [1] rstudioapi_0.14               jsonlite_1.8.5               
+  [3] magrittr_2.0.3                magick_2.7.4                 
+  [5] farver_2.1.1                  rmarkdown_2.22               
+  [7] fs_1.6.2                      zlibbioc_1.47.0              
+  [9] vctrs_0.6.2                   memoise_2.0.1                
+ [11] DelayedMatrixStats_1.23.0     RCurl_1.98-1.12              
+ [13] htmltools_0.5.5               S4Arrays_1.1.4               
+ [15] curl_5.0.1                    Rhdf5lib_1.23.0              
+ [17] SparseArray_1.1.9             rhdf5_2.45.0                 
+ [19] sass_0.4.6                    bslib_0.5.0                  
+ [21] htmlwidgets_1.6.2             cachem_1.0.8                 
+ [23] igraph_1.4.3                  whisker_0.4.1                
+ [25] mime_0.12                     lifecycle_1.0.3              
+ [27] pkgconfig_2.0.3               Matrix_1.5-4.1               
+ [29] R6_2.5.1                      fastmap_1.1.1                
+ [31] GenomeInfoDbData_1.2.10       shiny_1.7.4                  
+ [33] digest_0.6.31                 colorspace_2.1-0             
+ [35] AnnotationDbi_1.63.1          ps_1.7.5                     
+ [37] rprojroot_2.0.3               dqrng_0.3.0                  
+ [39] crosstalk_1.2.0               RSQLite_2.3.1                
+ [41] beachmat_2.17.6               labeling_0.4.2               
+ [43] filelock_1.0.2                fansi_1.0.4                  
+ [45] timechange_0.2.0              mgcv_1.8-42                  
+ [47] abind_1.4-5                   httr_1.4.6                   
+ [49] compiler_4.3.0                vissE_1.9.0                  
+ [51] bit64_4.0.5                   withr_2.5.0                  
+ [53] BiocParallel_1.35.2           DBI_1.1.3                    
+ [55] hexbin_1.28.3                 highr_0.10                   
+ [57] HDF5Array_1.29.3              R.utils_2.12.2               
+ [59] rappdirs_0.3.3                DelayedArray_0.27.4          
+ [61] rjson_0.2.21                  tools_4.3.0                  
+ [63] interactiveDisplayBase_1.39.0 httpuv_1.6.11                
+ [65] R.oo_1.25.0                   glue_1.6.2                   
+ [67] callr_3.7.3                   nlme_3.1-162                 
+ [69] rhdf5filters_1.13.2           promises_1.2.0.1             
+ [71] grid_4.3.0                    getPass_0.2-2                
+ [73] generics_0.1.3                gtable_0.3.3                 
+ [75] tzdb_0.4.0                    R.methodsS3_1.8.2            
+ [77] hms_1.1.3                     utf8_1.2.3                   
+ [79] XVector_0.41.1                BiocVersion_3.18.0           
+ [81] pillar_1.9.0                  limma_3.57.2                 
+ [83] later_1.3.1                   splines_4.3.0                
+ [85] lattice_0.21-8                bit_4.0.5                    
+ [87] tidyselect_1.2.0              locfit_1.5-9.8               
+ [89] Biostrings_2.69.1             scuttle_1.11.0               
+ [91] knitr_1.43                    git2r_0.32.0                 
+ [93] edgeR_3.43.3                  xfun_0.39                    
+ [95] DropletUtils_1.21.0           DT_0.28                      
+ [97] stringi_1.7.12                yaml_2.3.7                   
+ [99] evaluate_0.21                 codetools_0.2-19             
+[101] BiocManager_1.30.21           cli_3.6.1                    
+[103] xtable_1.8-4                  munsell_0.5.0                
+[105] processx_3.8.1                jquerylib_0.1.4              
+[107] Rcpp_1.0.10                   png_0.1-8                    
+[109] parallel_4.3.0                ellipsis_0.3.2               
+[111] blob_1.2.4                    sparseMatrixStats_1.13.0     
+[113] bitops_1.0-7                  viridisLite_0.4.2            
+[115] scales_1.2.1                  crayon_1.5.2                 
+[117] scico_1.4.0                   rlang_1.1.1                  
+[119] KEGGREST_1.41.0              </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

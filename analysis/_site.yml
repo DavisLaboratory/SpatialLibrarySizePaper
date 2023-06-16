@@ -13,5 +13,7 @@ output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
-    theme: cosmo
+    code_folding: hide
+    number-sections: true
+    theme: flatly
     highlight: textmate
